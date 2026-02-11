@@ -122,6 +122,7 @@ nav ul ul li {width:262px; display:list-item; position: relative;}
 <script src="papers.js"></script>
 <script src="digital.js"></script>
 <script src="links.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body> 
 <div class="topSticky"><div class="topBar"><div class="topRex"><img src="misc/rex.png" width="65" height="30"></div>
@@ -148,7 +149,7 @@ for (let i=0; i<papers.length; i++) {
 sel += "</ul></li><li><a>Цифра</a><ul><li class='ulD grD'><a>Дискмаги <span class='mc'>EXE</span></a></li>"
 for (let i=0; i<dis.length; i++) sel+= "<li class='ulD'><a onclick='showDiscGal("+i+")'>"+dis[i][0].split("|")[0]+"<span class='mc'>"+(dis[i].length-1)+"</span></a></li>"; sel += "<li class='ulP grP'><a>Электронные журналы <span class='mc'>PDF</span></a></li>"
 for (let i=0; i<PDFs.length; i++) sel+= "<li class='ulP'><a onclick='showPDFGal("+i+")'>"+PDFs[i][0].split("|")[0]+"<span class='mc'>"+(PDFs[i].length-1)+"</span></a></li>"; 
-sel+="</ul></li><li><a onclick='showTVGal()'>ТВ</a></li><li><a onclick='showStats()'>ТОП-1000</a></li></ul></nav>";
+sel+="</ul></li><li><a onclick='showTVGal()'>ТВ</a></li><li><a onclick='showYearStats()'>Годы</a></li><li><a onclick='showStats()'>ТОП-1000</a></li></ul></nav>";
 topRightCnt.innerHTML = sel;
 
 let sBtn = document.getElementById('sortBtn');
@@ -507,7 +508,7 @@ function showStats() {
             return asc ? v1 - v2 : v2 - v1;
         });
         let h = (id, txt) => `<th class='ns' onclick="renderStatsTable(window.currentTop, '${id}', ${sortCol===id?!asc:false})">${txt}</th>`;
-        let res = `<style>#statTab TD A {padding: 2px 0; text-align: left;}</style> <div class='infMsg' style='width: 80vw; margin: 30px auto;'><h1>ТОП-1000 игр по числу упоминаний</h1>
+        let res = `<style>#statTab TD A {padding: 2px 0; text-align: left;}</style> <div class='infMsg' style='width: 80vw; margin: 30px auto;'><h1>ТОП-1000 игр по числу статей и новостей</h1>
         <table id='statTab' class='tRes colP' style='background: none;'><tr><th>#</th>
         ${h('name','Название')} ${h('total','Упоминаний')} ${h('minY','Годы')} ${h('m','Журн')} ${h('b','Книг')} ${h('n','Газет')} ${h('d','Цифр')} ${h('v','ТВ')} </tr>`;
         data.forEach((s, i) => {
@@ -517,6 +518,93 @@ function showStats() {
     }
     window.currentTop = top;
     renderStatsTable(top);
+    hintBar.innerHTML = '';
+    window.scrollTo(0,0);
+}
+
+
+function showYearStats() {
+    let yData = {};
+    mags.forEach((mag, magIdx) => {
+        let [name, pref, type] = mag[0].split('|');
+        if (type === "1") return; 
+        for (let i = 1; i < mag.length; i++) {
+            let parts = mag[i].split('|');
+            let yy = parts[0].slice(0, 2);
+            let year = (parseInt(yy) > 90) ? 1900 + parseInt(yy) : 2000 + parseInt(yy);
+            if (!yData[year]) yData[year] = { year, issues: 0, articles: 0, uniqueMags: new Set() };
+            yData[year].issues++;
+            yData[year].articles += (parts.length - 1);
+            yData[year].uniqueMags.add(pref);
+        }
+    });
+
+    let data = Object.values(yData);
+    
+    window.renderYearTable = (sortCol = 'year', asc = true) => {
+        data.sort((a, b) => {
+            let v1 = a[sortCol], v2 = b[sortCol];
+            if (sortCol === 'uniqueMags') { v1 = v1.size; v2 = v2.size; }
+            return asc ? v1 - v2 : v2 - v1;
+        });
+
+        let h = (id, txt) => `<th class='ns' style='padding:5px' onclick="renderYearTable('${id}', ${sortCol===id?!asc:true})">${txt}</th>`;
+        let res = `<style>#yTab td {padding: 2px 5px; height: 20px;} #yTab a {padding: 0; text-align: center;}</style>
+            <div class='infMsg' style='width: 85vw; margin: 30px auto;'>
+            <h1>Активность игрожура по годам</h1>
+            <div style="background: rgba(255,255,255,0.5); padding: 10px; border-radius: 10px; margin-bottom: 20px;">
+                <canvas id="yearChart" style="max-height: 350px; height: 300px;"></canvas>
+            </div>
+            <table id="yTab" class='tRes colM' style='background: none;'>
+                <tr>${h('year','Год')} ${h('uniqueMags','Журналов выпускается')} ${h('issues','Выпусков')} ${h('articles','Статей в сумме')}</tr>`;
+        
+        data.forEach((d, i) => {
+            res += `<tr style='background: ${i%2?"rgba(99,99,99,0.05)":"none"}'>
+                <td><a onclick="showYear(${d.year})"><b>${d.year}</b></a></td>
+                <td>${d.uniqueMags.size}</td><td>${d.issues}</td><td>${d.articles}</td></tr>`;
+        });
+        prnt.innerHTML = res + "</table></div>";
+        initYearChart(Object.values(yData).sort((a,b)=>a.year-b.year));
+    };
+
+    function initYearChart(chartData) {
+        new Chart(document.getElementById('yearChart'), {
+            type: 'line',
+            data: {
+                labels: chartData.map(d => d.year),
+                datasets: [{
+                    label: 'Журналов',
+                    data: chartData.map(d => d.uniqueMags.size),
+                    borderColor: '#5d9d52',
+                    backgroundColor: '#5d9d52',
+                    yAxisID: 'y1',
+                    borderDash: [5, 5]
+                }, {
+                    label: 'Выпусков',
+                    data: chartData.map(d => d.issues),
+                    borderColor: '#345fb9',
+                    backgroundColor: '#345fb9',
+                    yAxisID: 'y1'
+                },  {
+                    label: 'Статей',
+                    data: chartData.map(d => d.articles),
+                    borderColor: '#b20f0b',
+                    backgroundColor: '#b20f0b',
+                    yAxisID: 'y'
+                }, ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { 
+                    y: { position: 'left', title: {display: true, text: 'Статьи'} },
+                    y1: { position: 'right', grid: { drawOnChartArea: false }, title: {display: true, text: 'Кол-во'} }
+                }
+            }
+        });
+    }
+
+    renderYearTable('year', true); // Сортировка по возрастанию года
     hintBar.innerHTML = '';
     window.scrollTo(0,0);
 }
