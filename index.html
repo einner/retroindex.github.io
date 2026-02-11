@@ -148,7 +148,7 @@ for (let i=0; i<papers.length; i++) {
 sel += "</ul></li><li><a>Цифра</a><ul><li class='ulD grD'><a>Дискмаги <span class='mc'>EXE</span></a></li>"
 for (let i=0; i<dis.length; i++) sel+= "<li class='ulD'><a onclick='showDiscGal("+i+")'>"+dis[i][0].split("|")[0]+"<span class='mc'>"+(dis[i].length-1)+"</span></a></li>"; sel += "<li class='ulP grP'><a>Электронные журналы <span class='mc'>PDF</span></a></li>"
 for (let i=0; i<PDFs.length; i++) sel+= "<li class='ulP'><a onclick='showPDFGal("+i+")'>"+PDFs[i][0].split("|")[0]+"<span class='mc'>"+(PDFs[i].length-1)+"</span></a></li>"; 
-sel+="</ul></li><li><a onclick='showTVGal()'>ТВ</a></li></ul></nav>";
+sel+="</ul></li><li><a onclick='showTVGal()'>ТВ</a></li><li><a onclick='showStats()'>ТОП-1000</a></li></ul></nav>";
 topRightCnt.innerHTML = sel;
 
 let sBtn = document.getElementById('sortBtn');
@@ -437,6 +437,90 @@ if (magID) {
 if (pubMon.length==1) pubMon = "0"+pubMon;
 return(fullYear+pubMon);
 }
+
+function showStats() {
+    let stats = {};
+    const process = (data, type, isMagOrPaper = false) => {
+        data.forEach((entry, idx) => {
+            if (idx === 0) return;
+            let parts = entry.split('|');
+            let dateStr = parts[0].split('@')[0]; // берем YYMM или YY
+            let year = parseInt(dateStr.slice(0, 2));
+            year = (year > 90) ? 1900 + year : 2000 + year;
+
+            let items = parts.slice(1);
+            items.forEach(item => {
+                let name = item.split(',')[0].trim();
+                if (!name || name === '*') return;
+                let cleanName = name.replace(/ \(.*\)/ig, '').trim();
+                let key = cleanName.toLowerCase();
+                if (!stats[key]) stats[key] = { name: cleanName, total: 0, m: 0, b: 0, n: 0, d: 0, v: 0, minY: year, maxY: year };
+                stats[key].total++;
+                stats[key][type]++;
+                if (year < stats[key].minY) stats[key].minY = year;
+                if (year > stats[key].maxY) stats[key].maxY = year;
+            });
+        });
+    };
+
+    mags.forEach(m => process(m, 'm', true));
+    books.forEach(b => {
+        b.forEach((entry, idx) => {
+            if (idx === 0) return;
+            let bookID = entry.split('|')[0];
+            let year = parseInt(book_details[bookID].split('|')[3]);
+            entry.split('|').slice(1).forEach(item => {
+                let name = item.split(',')[0].trim();
+                if (!name || name === '*') return;
+                let key = name.replace(/ \(.*\)/ig, '').trim().toLowerCase();
+                if (!stats[key]) stats[key] = { name: name.trim(), total: 0, m: 0, b: 0, n: 0, d: 0, v: 0, minY: year, maxY: year };
+                stats[key].total++; stats[key].b++;
+                if (year < stats[key].minY) stats[key].minY = year;
+                if (year > stats[key].maxY) stats[key].maxY = year;
+            });
+        });
+    });
+    papers.forEach(p => process(p, 'n', true));
+    dis.forEach(d => process(d, 'd', true));
+    PDFs.forEach(pdf => process(pdf, 'd', true));
+    
+    // ТВ
+    const processTV = (items, dateStr, type) => {
+        let year = parseInt(dateStr.slice(-4));
+        items.forEach(name => {
+            let key = name.trim().toLowerCase();
+            if (!stats[key]) stats[key] = { name: name.trim(), total: 0, m: 0, b: 0, n: 0, d: 0, v: 0, minY: year, maxY: year };
+            stats[key].total++; stats[key][type]++;
+            if (year < stats[key].minY) stats[key].minY = year;
+            if (year > stats[key].maxY) stats[key].maxY = year;
+        });
+    };
+    otvinta.forEach(v => processTV(v.split('|')[1].split('+'), v.split('|')[2], 'v'));
+    tvs.forEach(tv => tv.forEach((entry, idx) => { if (idx > 0) processTV(entry.split('|')[0].split('+'), entry.split('|')[1], 'v') }));
+
+    let top = Object.values(stats).sort((a, b) => b.total - a.total).slice(0, 1000);
+    
+    window.renderStatsTable = (data, sortCol = 'total', asc = false) => {
+        data.sort((a, b) => {
+            let v1 = a[sortCol], v2 = b[sortCol];
+            if (sortCol === 'name') return asc ? v1.localeCompare(v2) : v2.localeCompare(v1);
+            return asc ? v1 - v2 : v2 - v1;
+        });
+        let h = (id, txt) => `<th class='ns' onclick="renderStatsTable(window.currentTop, '${id}', ${sortCol===id?!asc:false})">${txt}</th>`;
+        let res = `<style>#statTab TD A {padding: 2px 0; text-align: left;}</style> <div class='infMsg' style='width: 80vw; margin: 30px auto;'><h1>ТОП-1000 игр по числу упоминаний</h1>
+        <table id='statTab' class='tRes colP' style='background: none;'><tr><th>#</th>
+        ${h('name','Название')} ${h('total','Упоминаний')} ${h('minY','Годы')} ${h('m','Журн')} ${h('b','Книг')} ${h('n','Газет')} ${h('d','Цифр')} ${h('v','ТВ')} </tr>`;
+        data.forEach((s, i) => {
+            res += `<tr style='background: ${i%2?"rgba(0,0,0,0.05)":"none"}'><td>${i+1}</td><td style='text-align:left; padding: 5px 10px'><a onclick="wrapper('${s.name}=')">${s.name}</a></td><td><b>${s.total}</b></td><td>${s.minY}${s.minY!=s.maxY?'-'+s.maxY:''}</td><td>${s.m}</td><td>${s.b}</td><td>${s.n}</td><td>${s.d}</td><td>${s.v}</td></tr>`;
+        });
+        prnt.innerHTML = res + "</table></div>";
+    }
+    window.currentTop = top;
+    renderStatsTable(top);
+    hintBar.innerHTML = '';
+    window.scrollTo(0,0);
+}
+
 
 function showGal(mt,ms) {
 let galArray = []; let cl = 0;
