@@ -102,18 +102,22 @@ nav ul ul li {width:262px; display:list-item; position: relative;}
 .topRex {display: block;}
 }
 @media (max-width: 600px) { 
-.topBar {border-bottom: 0;}
+.topBar {border-bottom: 0; height: auto; flex-wrap: wrap; padding: 5px 12px;}
 #covModal {align-items: flex-end; height: fill-available; height: -webkit-fill-available;}
 #modContent {border-radius: 0; border-width: 5px 0 0 0; padding:0; width: 100vw;}
 #modSel {flex-grow: 1;}
 .mobSelect {display: block;}
 .dtab {margin: 0;}
 .topBar {margin-bottom: 12px;}
-.topRight {display: none;}
+.topRex {display: block; order: 1;}
+.topCenter {order: 2; flex: 1;}
+.topRight {display: block; width: 100%; order: 3; margin-top: 5px;}
 .cov {width: 80px;}
 .tRes {background-color: rgba(127,127,127,0.1);}
 .tRes TH:nth-child(3) {border-top-right-radius: 0;} 
-.infMsg {max-width: 430px;}
+.infMsg {max-width: 430px; min-width: 0; width: 95vw; margin: 10px auto; padding: 10px; box-sizing: border-box;}
+#statTab, #yTab { width: 100% !important; font-size: 12px; }
+#statTab td, #yTab td { padding: 4px 2px; }
 }
 </style>
 <script src="tv.js"></script>
@@ -149,7 +153,7 @@ for (let i=0; i<papers.length; i++) {
 sel += "</ul></li><li><a>Цифра</a><ul><li class='ulD grD'><a>Дискмаги <span class='mc'>EXE</span></a></li>"
 for (let i=0; i<dis.length; i++) sel+= "<li class='ulD'><a onclick='showDiscGal("+i+")'>"+dis[i][0].split("|")[0]+"<span class='mc'>"+(dis[i].length-1)+"</span></a></li>"; sel += "<li class='ulP grP'><a>Электронные журналы <span class='mc'>PDF</span></a></li>"
 for (let i=0; i<PDFs.length; i++) sel+= "<li class='ulP'><a onclick='showPDFGal("+i+")'>"+PDFs[i][0].split("|")[0]+"<span class='mc'>"+(PDFs[i].length-1)+"</span></a></li>"; 
-sel+="</ul></li><li><a onclick='showTVGal()'>ТВ</a></li><li><a onclick='showYearStats()'>Годы</a></li><li><a onclick='showStats()'>ТОП-1000</a></li></ul></nav>";
+sel+="</ul></li><li><a onclick='showTVGal()'>ТВ</a></li>|<li><a onclick='showYearStats()'>Годы</a></li>|<li><a onclick='showStats()'>Игры</a></li></ul></nav>";
 topRightCnt.innerHTML = sel;
 
 let sBtn = document.getElementById('sortBtn');
@@ -577,7 +581,7 @@ function showYearStats() {
                     data: chartData.map(d => d.uniqueMags.size),
                     borderColor: '#5d9d52',
                     backgroundColor: '#5d9d52',
-                    yAxisID: 'y1',
+                    yAxisID: 'y',
                     borderDash: [5, 5]
                 }, {
                     label: 'Выпусков',
@@ -585,13 +589,7 @@ function showYearStats() {
                     borderColor: '#345fb9',
                     backgroundColor: '#345fb9',
                     yAxisID: 'y1'
-                },  {
-                    label: 'Статей',
-                    data: chartData.map(d => d.articles),
-                    borderColor: '#b20f0b',
-                    backgroundColor: '#b20f0b',
-                    yAxisID: 'y'
-                }, ]
+                },  ]
             },
             options: {
                 responsive: true,
