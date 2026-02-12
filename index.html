@@ -134,7 +134,9 @@ nav ul ul li {width:262px; display:list-item; position: relative;}
 <div class="topCenter"><span class="pBut topLeft" onClick="prntMsg()">?</span>
 <span class="cb"><input type="checkbox" id="chAuto"><label for="chAuto"></label></span><input type="search" id="sInp" autocomplete="off"><input type="button" id="sBut" value="Поиск " onclick="wrapper(sInp.value.trim())"><span class="pBut topLeft" id="sortBtn" onClick="sortTabs()" title="Сортировка по дате">&#8645;</span></div>
 <div class="topRight" id="topRightCnt"></div></div><div id="hintBar"></div></div>
-<div id="prnt"><div style="height: 90vh; display: flex; align-items: center;"><div style="text-align: center"><h1>Ваш путеводитель <nobr>по игрожуру 90-х</nobr></h1><img class="sar" src="misc/sarth.png"><h2>Поиск и каталог обзоров старых игр для IBM&nbsp;PC</h2></div></div></div>
+<div id="prnt"><div style="height: 50vh; display: flex; align-items: center;"><div style="text-align: center"><h1>Ваш путеводитель <nobr>по игрожуру 90-х</nobr></h1><img class="sar" src="misc/sarth.png"><h2>Поиск и каталог обзоров старых игр для IBM&nbsp;PC</h2></div></div></div>
+<div id="homeStats" style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 20px; font-family: Arial, sans-serif;"></div>
+</div></div></div>
 <div id="covModal"><div id="modContent"></div></div>								
 <div style="opacity: 0; font-size: 1px; font-family: Impact, Antnum;">2019</div>
 <script type="text/javascript">
@@ -876,6 +878,74 @@ if (cty == year) yearBuffer += '<span style="background-color: #fdbc00;">'+cty+'
 else yearBuffer += '<span onClick="showYear('+cty+')">'+cty+'</span>&nbsp;'; cty++; }
 hintBar.innerHTML = '<center>'+yearBuffer+'</center>';
 }
+
+
+function renderHomeStats() {
+	const t0 = performance.now();
+    let mCount = 0, issCount = 0, bCount = 0, pCount = 0, dCount = 0, artCount = 0, games = new Map();
+    const countArt = (arr) => {
+        for(let i=1; i<arr.length; i++) {
+            let p = arr[i].split('|');
+            issCount++; artCount += p.length-1;
+            p.slice(1).forEach(g => {
+                let n = g.split(',')[0].replace(/ \(.*\)/ig, '').trim();
+                let k = n.toLowerCase();
+                games.set(k, (games.get(k) || 0) + 1);
+            });
+        }
+    };
+    mags.forEach(m => { mCount++; countArt(m); });
+    papers.forEach(p => { pCount++; countArt(p); });
+    books.forEach(b => { bCount++; countArt(b); });
+    dis.forEach(d => { dCount++; countArt(d); });
+    PDFs.forEach(pdf => { dCount++; countArt(pdf); });
+
+    const s = (val, txt) => `<div style="background: rgba(255,255,255,0.4); margin: 0 10 0 10; padding: 8px 4px; border-radius: 10px; border: 1px solid #d2cdbc; flex: 1 1 21%; min-width: 90px; max-width: 24%; text-align: center; box-sizing: border-box;">
+        <div style="font-size: 15px; font-weight: bold; color: #800000;">${val}</div><div style="font-size: 12px; text-transform: uppercase; color: #666;">${txt}</div></div>`;
+
+	let gList = Array.from(games.entries()).filter(e => e[1] > 30);
+    let rndG = gList[Math.floor(Math.random() * gList.length)][0];
+    
+    // Поиск случайной обложки для выбранной игры
+    let rndCovG = 'misc/sarth.png';
+    magsLoop: for (let m of mags) {
+        let [mName, mPref] = m[0].split('|');
+        for (let i = 1; i < m.length; i++) {
+            if (m[i].toLowerCase().indexOf('|' + rndG + ',') !== -1 || m[i].toLowerCase().indexOf('|' + rndG + '|') !== -1) {
+                rndCovG = `cvs/${mPref}${m[i].split('|')[0]}.jpg`;
+                break magsLoop; 
+            }
+        }
+    }
+
+    let mIdx = Math.floor(Math.random() * mags.length);
+    while(mags[mIdx][0].split('|')[2] == "1") mIdx = Math.floor(Math.random() * mags.length); // Пропуск спецвыпусков без обложек в корне
+    let mIss = Math.floor(Math.random() * (mags[mIdx].length - 1)) + 1;
+    let [mName, mPref] = mags[mIdx][0].split('|');
+    let mFile = mags[mIdx][mIss].split('|')[0];
+
+
+    let blocks = `<div style="display:flex; gap:10px; width:100%; max-width:850px; margin-top:10px; flex-wrap: wrap;">
+        <div class="infMsg ns" style="flex: 1 1 300px; margin:0; padding:10px; display:flex; align-items:center; gap:12px; min-width:150px; box-sizing: border-box;" onclick="showGal(${mIdx})">
+            <img src="cvs/${mPref}${mFile}.jpg" style="width:50px; height:65px; object-fit:cover; border-radius:3px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2)">
+            <div><small style="color:#666; font-size:12px;">СЛУЧАЙНОЕ ИЗДАНИЕ</small><br><b style="font-size:14px">${mName}</b></div>
+        </div>
+        <div class="infMsg ns" style="flex: 1 1 300px; margin:0; padding:10px; display:flex; align-items:center; gap:12px; min-width:280px; box-sizing: border-box;" onclick="wrapper('${rndG.replace(/'/g, "^")}=')">
+            <img src="${rndCovG}" style="width:50px; height:65px; object-fit:cover; border-radius:3px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2)">
+            <div><small style="color:#666; font-size:12px;">СЛУЧАЙНАЯ ИГРА</small><br><b style="font-size:14px">${rndG.toUpperCase()}</b></div>
+        </div>
+    </div>`;
+
+
+    document.getElementById('homeStats').innerHTML = 
+        `<div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:100%; max-width:850px;">` +
+        s(games.size.toLocaleString(), 'Игр') + s(artCount.toLocaleString(), 'Статей') + s(issCount.toLocaleString(), 'Выпусков') + s(mCount, 'Журналов') + 
+        s(bCount, 'Книг') + s(pCount, 'Газет') + s(dCount, 'Цифра') + `</div>` + blocks;
+	console.log("HomeStats generated in:", (performance.now() - t0).toFixed(2), "ms");
+
+}
+renderHomeStats();
+
 </script>
 </body>
 </html>
