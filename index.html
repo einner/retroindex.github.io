@@ -126,7 +126,6 @@ nav ul ul li {width:262px; display:list-item; position: relative;}
 <script src="papers.js"></script>
 <script src="digital.js"></script>
 <script src="links.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body> 
 <div class="topSticky"><div class="topBar"><div class="topRex"><img src="misc/rex.png" width="65" height="30"></div>
@@ -140,6 +139,13 @@ nav ul ul li {width:262px; display:list-item; position: relative;}
 <div id="covModal"><div id="modContent"></div></div>								
 <div style="opacity: 0; font-size: 1px; font-family: Impact, Antnum;">2019</div>
 <script type="text/javascript">
+
+// Динамическая загрузка Chart.js только если открыто не через file://
+if (window.location.protocol !== 'file:') {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+    document.head.appendChild(script);
+}
 
 let sel = "<nav><ul><li><a>Журналы</a><ul class='ulM'>"; 
 let maKeys = []; let npKeys = []; let maMisc = []; let msCount = 0;
@@ -589,6 +595,8 @@ function showStats() {
 
 function showYearStats() {
     let yData = {};
+    const chartLoaded = typeof Chart !== 'undefined';
+
     mags.forEach((mag, magIdx) => {
         let [name, pref, type] = mag[0].split('|');
         if (type === "1") return; 
@@ -613,14 +621,19 @@ function showYearStats() {
         });
 
         let h = (id, txt) => `<th class='ns' style='padding:5px' onclick="renderYearTable('${id}', ${sortCol===id?!asc:true})">${txt}</th>`;
+        
+        let chartHtml = chartLoaded 
+            ? `<div style="background: rgba(255,255,255,0.5); padding: 10px; border-radius: 10px; margin-bottom: 20px;">
+                <canvas id="yearChart" style="max-height: 350px; height: 300px;"></canvas>
+               </div>`
+            : ``;
+
         let res = `<style>#yTab td {padding: 2px 5px; height: 20px;} #yTab a {padding: 0; text-align: center;}</style>
             <div class='infMsg' style='width: 85vw; margin: 30px auto;'>
             <h1>Активность игрожура по годам</h1>
-            <div style="background: rgba(255,255,255,0.5); padding: 10px; border-radius: 10px; margin-bottom: 20px;">
-                <canvas id="yearChart" style="max-height: 350px; height: 300px;"></canvas>
-            </div>
+            ${chartHtml}
             <table id="yTab" class='tRes colM' style='background: none;'>
-                <tr>${h('year','Год')} ${h('uniqueMags','Журналов выпускается')} ${h('issues','Выпусков')} ${h('articles','Статей в сумме')}</tr>`;
+                <tr>${h('year','Год')} ${h('uniqueMags','Журналов выходит')} ${h('issues','Выпусков')} ${h('articles','Статей всего')}</tr>`;
         
         data.forEach((d, i) => {
             res += `<tr style='background: ${i%2?"rgba(99,99,99,0.05)":"none"}'>
@@ -628,7 +641,7 @@ function showYearStats() {
                 <td>${d.uniqueMags.size}</td><td>${d.issues}</td><td>${d.articles}</td></tr>`;
         });
         prnt.innerHTML = res + "</table></div>";
-        initYearChart(Object.values(yData).sort((a,b)=>a.year-b.year));
+        if (chartLoaded) initYearChart(Object.values(yData).sort((a,b)=>a.year-b.year));
     };
 
     function initYearChart(chartData) {
