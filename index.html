@@ -1060,37 +1060,21 @@ if (localStorage.getItem('theme') === 'dark') {
 }
 
 function renderHomeStats() {
-	const t0 = performance.now();
-    let mCount = 0, issCount = 0, bCount = 0, pCount = 0, dCount = 0, artCount = 0, games = new Map();
-    const countArt = (arr) => {
-        for(let i=1; i<arr.length; i++) {
-            let p = arr[i].split('|');
-            issCount++; artCount += p.length-1;
-            p.slice(1).forEach(g => {
-                let n = g.split(',')[0].replace(/ \(.*\)/ig, '').trim();
-                let k = n.toLowerCase();
-                games.set(k, (games.get(k) || 0) + 1);
-            });
-        }
-    };
-    mags.forEach(m => { mCount++; countArt(m); });
-    papers.forEach(p => { pCount++; countArt(p); });
-    books.forEach(b => { bCount++; countArt(b); });
-    dis.forEach(d => { dCount++; countArt(d); });
-    PDFs.forEach(pdf => { dCount++; countArt(pdf); });
+    const t0 = performance.now();
+    const stats = { games: "11,238", articles: "5997", issues: "3091", mags: 40, books: 11, papers: 6, digital: 11};
 
     const s = (val, txt) => `<div style="background: var(--panel); margin: 0 10 0 10; padding: 8px 4px; border-radius: 10px; border: 1px solid var(--border); flex: 1 1 21%; min-width: 90px; max-width: 24%; text-align: center; box-sizing: border-box;">
-        <div style="font-size: 15px; font-weight: bold; color: var(--h2);">${val}</div><div style="font-size: 12px; text-transform: uppercase; color: var(--text); opacity: 0.6;">${txt}</div></div>`;
+    <div style="font-size: 15px; font-weight: bold; color: var(--h2);">${val}</div><div style="font-size: 12px; text-transform: uppercase; color: var(--text); opacity: 0.6;">${txt}</div></div>`;
 
-	let gList = Array.from(games.entries()).filter(e => e[1] > 30);
+    const gList = [["prince of persia",45],["doom",38],["command & conquer: tiberian sun",39],["full throttle",31],["quake",54],["warcraft 2",32],["command & conquer",33],["heroes of might & magic",31],["diablo",34],["duke nukem 3d",37],["prey",55],["starcraft",56],["unreal",43],["fallout",45],["tomb raider",40],["thief: the dark project",35],["ultima online",73],["ultima 9: ascension",32],["baldur's gate",50],["князь",32],["quake 2",37],["daikatana",35],["half-life",65],["jagged alliance 2",39],["messiah",32],["dead space",33],["max payne",55],["grim fandango",37],["anachronox",36],["wizardry 8",40],["duke nukem forever",50],["starship troopers",37],["diablo 2",54],["age of empires 2",33],["fallout 2",45],["dungeon keeper 2",35],["heroes of might & magic 3",48],["black & white",46],["homeworld",40],["starcraft: brood war",36],["kingpin: life of crime",32],["quake 3",40],["system shock 2",32],["planescape: torment",42],["operation flashpoint",33],["unreal tournament",31],["freelancer",40],["the sims",37],["deus ex",43],["team fortress 2",43],["neverwinter nights",65],["command & conquer: renegade",38],["warcraft 3",75],["american mcgee's alice",35],["return to castle wolfenstein",43],["baldur's gate 2",37],["republic: the revolution",40],["ufo: aftermath",37],["dungeon siege",38],["arcanum",35],["fallout tactics",36],["mafia",31],["ил-2 штурмовик",39],["unreal 2",39],["the elder scrolls 3: morrowind",55],["doom 3",63],["civilization 3",36],["medal of honor: allied assault",33],["демиурги",31],["периметр",50],["age of mythology",35],["heroes of might & magic 4",49],["корсары 2",48],["deus ex: invisible war",46],["star wars: knights of the old republic",45],["world of warcraft",151],["блицкриг",34],["hitman 2: silent assassin",31],["kreed",35],["call of cthulhu: dark corners of the earth",48],["операция silent storm",42],["warlords 4",38],["сфера",40],["command & conquer: generals",35],["counter-strike: condition zero",33],["вторая мировая",32],["демиурги 2",39],["vivisector",40],["firestarter",35],["commandos 3: destination berlin",38],["s.t.a.l.k.e.r.",91],["казаки 2",46],["splinter cell",41],["painkiller",42],["rise of nations",37],["xenus",51],["spellforce: the order of dawn",32],["xiii",37],["broken sword 3",34],["ground control 2",39],["warcraft 3: the frozen throne",74],["the movies",56],["far cry",42],["в тылу врага",39],["homeworld 2",31],["prince of persia: the sands of time",43],["half-life 2",56],["vampire: the masquerade - bloodlines",46],["sacred",45],["syberia 2",33],["lineage 2",54],["max payne 2",32],["lionheart",31],["call of duty",41],["the temple of elemental evil",34],["unreal tournament 2004",32],["космические рейнджеры 2",35],["you are empty",41],["магия крови",38],["морской охотник",37],["star wars: battlefront",39],["star wars: republic commando",41],["мор. утопия",41],["warhammer 40000: dawn of war",49],["black & white 2",49],["star wars: knights of the old republic 2",34],["the witcher",73],["f.e.a.r.",48],["dragon age: origins",55],["rome: total war",54],["lord of the rings: battle for middle-earth",41],["dungeon siege 2",41],["battlefield 2",32],["tabula rasa",36],["lada racing club",32],["the sims 2",50],["evil genius",41],["the bard's tale",38],["medal of honor: pacific assault",32],["pirates!",42],["imperial glory",32],["блицкриг 2",43],["grand theft auto: san andreas",39],["scrapland",31],["fahrenheit",38],["splinter cell 3",36],["guild wars",50],["everquest 2",58],["the elder scrolls 4: oblivion",63],["герои уничтоженных империй",36],["ночной дозор",43],["ex machina",32],["бригада е5: новый альянс",31],["dreamfall: the longest journey",37],["корсары 3",33],["hitman: blood money",31],["star wars: empire at war",38],["heroes of might & magic 5",76],["hellgate: london",46],["civilization 4",34],["age of conan: hyborian adventures",33],["call of duty 2",31],["tomb raider 7",35],["age of empires 3",38],["quake 4",35],["spore",52],["spellforce 2: shadow wars",32],["gothic 3",46],["serious sam 2",32],["prince of persia: the two thrones",32],["company of heroes",36],["rise of nations: rise of legends",33],["paraworld",33],["ragnarok online",42],["need for speed: most wanted",35],["lord of the rings: battle for middle-earth 2",39],["dark messiah of might & magic",39],["supreme commander",34],["warhammer: mark of chaos",38],["neverwinter nights 2",41],["timeshift",32],["maelstrom",40],["splinter cell: double agent",31],["titan quest",40],["crysis",52],["eve online",50],["в тылу врага 2",31],["world in conflict",37],["анабиоз: сон разума",36],["king's bounty: легенда о рыцаре",53],["brothers in arms: hell's highway",33],["mass effect",34],["bioshock",52],["alone in the dark 5",35],["frontlines: fuel of war",31],["command & conquer 3: tiberium wars",36],["enemy territory: quake wars",32],["alan wake",37],["disciples 3",43],["sam & max: season one",34],["дальнобойщики 3",32],["assassin's creed",45],["lotro",51],["warhammer online",63],["devil may cry 4",32],["starcraft 2",40],["fallout 3",51],["s.t.a.l.k.e.r.: чистое небо",32],["world of warcraft: wrath of the lich king",32],["far cry 2",38],["rage",32],["left 4 dead",34],["предтечи",31],["aion",37],["mirror's edge",31],["empire: total war",35],["mafia 2",32],["warhammer 40000: dawn of war 2",31],["diablo 3",39],["аллоды онлайн",52],["majesty 2",34],["world of tanks",54],["star wars: the old republic",41],["borderlands",35],["the witcher 2",40],["crysis 2",32],["deus ex: human revolution",39],["dragon age 2",32]];
+
     let rndG = gList[Math.floor(Math.random() * gList.length)][0];
     
-    // Поиск случайной обложки для выбранной игры
     let rndCovG = 'misc/sarth.png';
     magsLoop: for (let m of mags) {
         let [mName, mPref] = m[0].split('|');
         for (let i = 1; i < m.length; i++) {
-            if (m[i].toLowerCase().indexOf('|' + rndG + ',') !== -1 || m[i].toLowerCase().indexOf('|' + rndG + '|') !== -1) {
+            if (m[i].toLowerCase().indexOf('|' + rndG.toLowerCase() + ',') !== -1 || m[i].toLowerCase().indexOf('|' + rndG.toLowerCase() + '|') !== -1) {
                 rndCovG = `cvs/${mPref}${m[i].split('|')[0]}.jpg`;
                 break magsLoop; 
             }
@@ -1098,7 +1082,7 @@ function renderHomeStats() {
     }
 
     let mIdx = Math.floor(Math.random() * mags.length);
-    while(mags[mIdx][0].split('|')[2] == "1") mIdx = Math.floor(Math.random() * mags.length); // Пропуск спецвыпусков без обложек в корне
+    while(mags[mIdx][0].split('|')[2] == "1") mIdx = Math.floor(Math.random() * mags.length);
     let mIss = Math.floor(Math.random() * (mags[mIdx].length - 1)) + 1;
     let [mName, mPref] = mags[mIdx][0].split('|');
     let mFile = mags[mIdx][mIss].split('|')[0];
@@ -1114,13 +1098,11 @@ function renderHomeStats() {
         </div>
     </div>`;
 
-
     document.getElementById('homeStats').innerHTML = 
         `<div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:100%; max-width:850px;">` +
-        s(games.size.toLocaleString(), 'Игр') + s(artCount.toLocaleString(), 'Статей') + s(issCount.toLocaleString(), 'Выпусков') + s(mCount, 'Журналов') + 
-        s(bCount, 'Книг') + s(pCount, 'Газет') + s(dCount, 'Цифра') + `</div>` + blocks;
-	console.log("HomeStats generated in:", (performance.now() - t0).toFixed(2), "ms");
-
+        s(stats.games, 'Игр') + s(stats.articles, 'Статей') + s(stats.issues, 'Выпусков') + s(stats.mags, 'Журналов') + 
+        s(stats.books, 'Книг') + s(stats.papers, 'Газет') + s(stats.digital, 'Дискмаги') + `</div>` + blocks;
+    // console.log("HomeStats generated in:", (performance.now() - t0).toFixed(2), "ms");
 }
 renderHomeStats();
 
