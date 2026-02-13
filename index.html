@@ -423,7 +423,32 @@ for (i=0; i<gHint.length; i++) gHintBuffer += '<span title=\"'+gHint[i]+'\" onCl
 if (gHint.length == 1) gHintBuffer = '';
 if (window.newHints) hintBar.innerHTML = gHintBuffer;
 else window.newHints = true;
-if (gHint.length < 64) prnt.innerHTML = magRes+bookRes+papRes+discRes+PDFRes+vidRes+gridFix.repeat(4);
+if (gHint.length < 64) {
+        let gameHeader = "";
+        // Если поиск по конкретной игре (запрос заканчивается на =)
+        if (sReg.indexOf('=') >= 0) {
+            let cleanName = sReg.replace('=', '').trim();
+            let og = typeof ogData !== 'undefined' ? (ogData[cleanName] || ogData[cleanName.toLowerCase()]) : null;
+            if (og) {
+                gameHeader = `
+                <div class="infMsg" style="width: 90%; max-width: 1000px; margin: 10px auto 20px; box-sizing: border-box; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h1 style="margin: 0 0 5px 0;">${cleanName}</h1>
+                            <div style="font-size: 14px;">
+                                <b>Жанр:</b> ${og[0]} | <b>Год:</b> ${og[1]} | <b>Платформа:</b> ${og[2]} | <b>Издатель:</b> ${og[3]} | 
+                                <b>Оценка OldGames:</b> <span style="color: var(--h2); font-weight: bold;">${og[4]}</span>
+                            </div>
+                        </div>
+                        <a href="https://www.old-games.ru/game/${og[5]}.html" target="_blank" style="width: auto; padding: 5px 15px; border: 1px solid var(--border); border-radius: 5px; text-decoration: none; color: var(--text); background: rgba(127,127,127,0.1); font-size: 13px;">
+                            Открыть на Old-Games.ru →
+                        </a>
+                    </div>
+                </div>`;
+            }
+        }
+        prnt.innerHTML = gameHeader + magRes + bookRes + papRes + discRes + PDFRes + vidRes + gridFix.repeat(4);
+	}
 else prnt.innerHTML = '<div class="errMsg">Уточните запрос, или выберите игру из списка ('+gHint.length+')</div>';
 const end = new Date().getTime();
 console.log(end - start, "ms");
@@ -616,11 +641,18 @@ function showStats() {
     window.renderStatsTable = (data, sortCol = 'total', asc = false) => {
         data.sort((a, b) => {
             let v1 = a[sortCol], v2 = b[sortCol];
+            const isEmpty1 = v1 === '—' || v1 === null || v1 === undefined;
+            const isEmpty2 = v2 === '—' || v2 === null || v2 === undefined;
+            if (isEmpty1 && !isEmpty2) return 1;
+            if (!isEmpty1 && isEmpty2) return -1;
+            if (isEmpty1 && isEmpty2) return 0;			
             if (sortCol === 'name' || sortCol === 'genre') {
                 v1 = String(v1); v2 = String(v2);
                 return asc ? v1.localeCompare(v2) : v2.localeCompare(v1);
             }
-            return asc ? v1 - v2 : v2 - v1;
+			let n1 = (v1 === '—' || v1 === null) ? -1 : parseFloat(v1);
+            let n2 = (v2 === '—' || v2 === null) ? -1 : parseFloat(v2);
+            return asc ? n1 - n2 : n2 - n1;
         });
         let h = (id, txt) => `<th class='ns' onclick="renderStatsTable(window.currentTop, '${id}', ${sortCol===id?!asc:false})">${txt}</th>`;
         let res = `<style>#statTab TD A {padding: 2px 0; text-align: left;} .ogL {opacity:0.5} .ogL:hover {opacity:1}</style> 
