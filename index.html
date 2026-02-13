@@ -10,29 +10,59 @@
 <meta name="description"  content="Ваш путеводитель по игрожуру 90х — поиск и каталог обзоров старых игр для IBM PC">
 <title>Retroindex</title>
 <style>
-HTML {overflow-y: scroll;}
-BODY {background: #e9e3cc url(misc/paper.jpg) scroll; margin: 0;}
+:root {
+  --bg: #e9e3cc;
+  --bg-img: url(misc/paper.jpg);
+  --text: #000;
+  --panel: #f4efda;
+  --border: #bbb;
+  --h2: #800000;
+  --shadow: rgba(0,0,0,0.2);
+  --error: #f883a2;
+  --btn-border: #4c270e;
+  --table-border: #d2cdbc;
+  --mod-zebra: #f0f5ff;
+  --mod-border: #345fb9;  
+}
+
+.dark-mode {
+  --bg: #293549;
+  --bg-img: none;
+  --text: #d4d4d4;
+  --panel: #2d4a65;
+  --border: #3d5a75;
+  --h2: #6ab4ff;
+  --shadow: rgba(0,0,0,0.6);
+  --error: #8b2e3e;
+  --btn-border: #6ab4ff;
+  --table-border: #3d5a75;
+  --mod-zebra: #243447;
+  --mod-border: #4a90e2;  
+}
+
+HTML {overflow-y: scroll; transition: background 0.3s;}
+BODY {background: var(--bg) var(--bg-img) scroll; margin: 0; color: var(--text); transition: color 0.3s;}
 H1,H2,H3 {font-family: Arial;}
-H2 {color: #800000;}
-H2 A:hover{color: #b20f0b; cursor: pointer;}
-H3 {color: #800000; display: inline; padding-bottom: 2px;}
+H2 {color: var(--h2);}
+H3 {color: var(--h2); display: inline; padding-bottom: 2px;}
 H3:hover {color: #b20f0b; cursor: pointer;}
 H3 A {text-decoration: none;}
 TD A {display: block; width: 100%; padding: 15px 0; text-align: right; outline: none;}
 P {margin-bottom: 0;}
 @font-face {font-family: 'Antnum'; src: url('misc/antnum.woff2') format('woff2');}
-#sInp {padding: 0 10px 0 36px; width: 250px; height: 32px; margin-right: 0; border-radius: 15px 0 0 15px; font-size:15px; outline: none; border: 0; background-color: #f4efda; box-shadow: inset 1px 1px 1px rgba(0,0,0,0.2); transition: background-color .3s ease-out;}
-#sInp:focus {background-color: #fff;}
-#sBut {height: 32px; margin-left: 0; border-radius: 0 15px 15px 0; font-size:15px; border: 1px #4c270e solid; background-color: #f4efda; outline: none;}
+#sInp {padding: 0 10px 0 36px; width: 250px; height: 32px; margin-right: 0; border-radius: 15px 0 0 15px; font-size:15px; outline: none; border: 0; background-color: var(--panel); color: var(--text); box-shadow: inset 1px 1px 1px rgba(0,0,0,0.2); transition: background-color .3s ease-out;}
+#sBut {height: 32px; margin-left: 0; border-radius: 0 15px 15px 0; font-size:15px; border: 1px var(--btn-border) solid; background-color: var(--panel); color: var(--text); outline: none;}
+#sInp:focus {background-color: var(--panel);}
+#sBut {height: 32px; margin-left: 0; border-radius: 0 15px 15px 0; font-size:15px; border: 1px #4c270e solid; background-color: var(--panel); outline: none;}
 .pBut {display: inline-block; height: 27px; width: 27px; background-color: rgba(127,127,127,0.1); border: #bbb 1px solid; border-radius: 50%; position: relative; left: 17px; user-select: none; font: bold 16px Arial; color: #baa; line-height: 27px;}
 .pBut:hover{cursor: pointer; border-color: rgba(127,127,127,0.1); box-shadow: inset 1px 1px 0 rgba(0,0,0,0.2); background-color: rgba(255,210,30,0.5); left: 16px;}
-#sel {height: 25px; margin-right: 0; font-size:14px; outline: none; border: 0; background-color: #f4efda;}
+#sel {height: 25px; margin-right: 0; font-size:14px; outline: none; border: 0; background-color: var(--panel);}
 #prnt {display: flex; flex-wrap: wrap; justify-content: center;} 
-#chAuto {border: 1px #4c270e solid; background-color: #f4efda; border-radius: 15px;}
+#chAuto {border: 1px var(--btn-border) solid; background-color: var(--panel); border-radius: 15px;}
 #modSel option:nth-child(2n) {background-color: #f0f5ff;}
 #modSel {flex-basis: 292px; flex-grow: 1;}
-.topSticky {position: sticky; top: 0; background-color: #e9e3cc; background: url(misc/paper.jpg); z-index: 100;}																																
-.topBar {height: 45px; background-color: #e9e3cc; background: url(misc/paper.jpg); text-align: center; padding: 0 12px 0 8px; display: flex; margin: 0; align-items: center;}
+.topSticky {position: sticky; top: 0; background-color: var(--bg); background: var(--bg-url); z-index: 100;}
+.topBar {height: 45px; background-color: var(--bg); background: var(--bg-url); text-align: center; padding: 0 12px 0 8px; display: flex; margin: 0; align-items: center;}
 .topRex {display: none;}
 .topCenter {flex: 1 0 0; white-space: nowrap; height: 100%; padding-top: 3px;}
 .topRight {padding-top: 1px;}
@@ -60,8 +90,10 @@ P {margin-bottom: 0;}
 .tRes TH:nth-child(3) {border-top-right-radius: 4px; width: 36px;}
 .tRes TH, TD {padding: 0;}
 .flexFix {height: 0; padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;}
-.errMsg {background-color: #f883a2; max-width: 400px; padding: 15px; margin-top: 30px; border-radius: 15px; font: 14px Arial;}
-.infMsg {background-color: #f4efda; min-width: 640px; width: 60vw; padding: 15px; margin: 30px 0; border-radius: 15px; font: 14px Arial;}
+.errMsg {background-color: var(--error); max-width: 400px; padding: 15px; margin-top: 30px; border-radius: 15px; font: 14px Arial;}
+.infMsg {background-color: var(--panel); min-width: 640px; width: 60vw; padding: 15px; margin: 30px 0; border-radius: 15px; font: 14px Arial;}
+.infMsg {background-color: var(--panel); color: var(--text); min-width: 640px; width: 60vw; padding: 15px; margin: 30px 0; border-radius: 15px; font: 14px Arial;}
+#modContent {background: var(--bg) var(--bg-url); color: var(--text); border-radius: 15px; padding: 10px; border: 3px solid #345fb9; width: 450px; z-index: 20; display: flex; align-items: flex-start;}
 .cb {position: relative; left: 31px; top: 9px;}
 .sar {border-radius: 15px;}
 .ns {user-select: none; cursor: pointer !important;}
@@ -70,15 +102,14 @@ P {margin-bottom: 0;}
 #chAuto + label:before {display: inline-block; cursor: pointer; height: 28px; width: 28px; content: ""; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAVFBMVEX////49/b29PPx7uzq5uPi3Njb1M/Uy8XNw7zGurK+sai3qZ+woJWunpKpmIyij4KbhniUfW6NdWWGbFt/ZFJ3W0hwUj5pSjViQStbOSJTLxdMJw6AJr+6AAAAAXRSTlMAQObYZgAAAghJREFUeNqU1OsSqygUhNFmFFTJeIsi8r3/e54Klcx4NEmZ9RPZQndZ6uwf/69+tFHrurLzsiSj6waCWmb9wIGduOmgSb3RJ4E+YvUXMwCTPunYYHXaKQPbQqdPChg22N2jTYRypdJR3yrTzL2c/z/ITDCbkqSjG8kpa0hGHdzzOXYFUufPJdqUXgebhJdsocytqakjnKMMDHoZY7tvy+bLnaOE51JZS4VO6jdRAl4PnlZvDLsoRspGopFkzl0+E3XK3LB1/8Un1sYtzHrLFJJcH4GgJ0+2lZ8/8QCwLJR6qldgtfokAhGvel+3ba0+65nKglkVsy5y9FIgpusjWjdXpTmSal3lAQbjcnfO+36cQlj01QBrqYyXqO9Kt6vvPvbeV05X+Y3UG/3EdIntpquqHKh4RGv1VdGWymJSZidYrL5oIN5vTiWz7G0cl7Am8Pqi3XhIgU6el1Zfle24AtSqxtH72lldUTQbRr8xBP2oZtBO4Zw+MOVrj6926SZga/RGHSB6HZURtvi2aU826iCQblJLsm/+vl52Pr2tea7c6XTQkxPPbPrLwKKH8Xz+iM/Bwelpv9Vs9JKaMEmyIeRHzHpYDyMtqyRNYHPgIMnB7s4FFNozK3NVLzDoOKIZBlstjOeSH0adR4rAw2J0YPoQ5kZvRmSGSOyMPtuPXOb5M/poAQPqaQEAEhEuCu707rIAAAAASUVORK5CYII=); background-size: contain;}
 #chAuto:checked + label:before {display: inline-block; cursor: pointer; height: 28px; width: 28px; content: ""; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAVFBMVEX////49/b29PPx7uzq5uPi3Njb1M/Uy8XNw7zGurK+sai3qZ+woJWunpKpmIyij4KbhniUfW6NdWWGbFt/ZFJ3W0hwUj5pSjViQStbOSJTLxdMJw6AJr+6AAAAAXRSTlMAQObYZgAAAi1JREFUeNqUlImyojAURG8GEpA4bEK28///OQUV3/ASfctx19t0usu6UvPH/pVfEunl57SjFU1Sv5DMOBnY5BcY0Ct3Kbil6b2xYwpo+YSagVXeMRLBm0/5HHFnlHc0MEe4nGNIuNbTSck05Dcbj3b7b6RW2FRLkpI7yeSkR8UjPE4f7YE02rpEndLTWCWsiG5ygz7d+gB1lJlZnixhuLalz8PVUVz+qu1FGqnoSVJLrBxYBnnBfInyrHIhHG9V3WVONOY3cxw/4hN6ZfayGMiXbo75KQBOMpaT2FaSTDs6gH3nY6T3gNelAskEIGClv9ath0JwNZGJtW3YpCvP/l5imEQcIf1cIj6aLm2B1EtNEeVa0KzM2Z2xdlpW5/ZaIhdm8LktnoSvJdKaS32PZbK2M+UsyGtspFwGUEYpUGMi3uvcbxTdGag5og1XTS1phpw9JDnRK+z6alNKbhAedyMtm+j7suzOJ7BXmzLKEDlIjlEsT4ZCUu7rYfEAvXTLYm1vdNHZ676aW0TJa95IROHkl5Ke+ZOrMe/+Lap9ztjukm4F4u2VpHcQrJS0AWIAKxWWk0UKHOkuMpD0i+1rRW/V1W75m0e9fSfOxBuxXIi7HCy1/4I9g4ORK3lURabD060iop07f8obwheSAX+8rKDPwMewgcuZG2jkivJsXb/DLKVENph1t7PUJecmK0njONiVFKjJue0mLySi5kAY/w1XcsTUggCDQgsYUE8LABacNVGE1b6XAAAAAElFTkSuQmCC); background-size: contain;}
 #covModal {display: none; position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.5); z-index: 150; align-items: center; justify-content: center;}
-#modContent {background: #e9e3cc url(misc/paper.jpg); border-radius: 15px; padding: 10px; border: 3px solid #345fb9; width: 450px; z-index: 20; display: flex; align-items: flex-start;}
+#modContent {background: var(--bg) var(--bg-img); border-radius: 15px; padding: 10px; border: 3px solid #345fb9; width: 450px; z-index: 20; display: flex; align-items: flex-start;}
 #hintBar {margin-top: 5px; padding: 0 10px 5px 5px; min-height: 22px; background-color: rgba(127,127,127,0.1); border-top: #bbb 1px dotted; border-bottom: #bbb 1px dotted;}
-#hintBar span {display: inline-block; border-radius: 4px; font: 12px Arial; padding: 1px 3px; margin-left: 5px; margin-top: 5px; background-color: #f4efda; color: #000; white-space: nowrap;}
+#hintBar span {display: inline-block; border-radius: 4px; font: 12px Arial; padding: 1px 3px; margin-left: 5px; margin-top: 5px; background-color: var(--h2); color: #000; white-space: nowrap;}
 #hintBar span:hover {background-color: gold; cursor: pointer;}
 nav {white-space: nowrap;}
 nav ul {padding:0; margin:0; list-style: none; position: relative;}
-nav ul li {margin: 0; display:inline-block; background-color: #f4efda;}
-nav a {display:block; text-align: left; padding:0 5px; color:#000; font: 15px Arial; line-height: 30px; text-decoration:none; cursor: pointer; border-top: 1px #ccc dotted;}
-li:nth-child(20) a {border-top: 1px #345fb9 dotted;}
+nav ul li {margin: 0; display:inline-block; background-color: var(--panel);}
+nav a {display:block; text-align: left; padding:0 5px; color: var(--text); font: 15px Arial; line-height: 30px; text-decoration:none; cursor: pointer; border-top: 1px var(--border) dotted;}
 nav a:hover {background-color: #b20f0b; color: #fff;}
 nav ul ul {display: none; position: absolute; top: 100%; left: 0;}
 nav ul li:hover > ul {display:inherit;}
@@ -88,8 +119,8 @@ nav ul ul li {width:262px; display:list-item; position: relative;}
 .ulN {border-left: 3px #0d96a4 solid;}
 .ulD {border-left: 3px #8e3ca2 solid;}
 .ulP {border-left: 3px #b20f0b solid;}
-.grD {background: linear-gradient(90deg, #d4b7c8, #f4efda);}
-.grP {background: linear-gradient(90deg, #e1ad9d, #f4efda);}
+.grD {background: linear-gradient(90deg, #d4b7c8, var(--h2));}
+.grP {background: linear-gradient(90deg, #e1ad9d, var(--h2));}
 .linkM {border-bottom: 3px #345fb9 solid;}
 .linkN {border-bottom: 3px #0d96a4 solid;}
 .linkB {border-bottom: 3px #5d9d52 solid;}
@@ -131,6 +162,7 @@ nav ul ul li {width:262px; display:list-item; position: relative;}
 <div class="topSticky"><div class="topBar"><div class="topRex"><img src="misc/rex.png" width="65" height="30"></div>
 <div class="topLeft"><a href="https://retroindex.github.io"><img src="misc/retrologo.png" width="197" height="30"></a></div>
 <div class="topCenter"><span class="pBut topLeft" onClick="prntMsg()">?</span>
+<span class="pBut" id="tglBtn" onClick="toggleTheme()" title="Сменить тему" style="left: 20px; font-size:14px;">☼</span>
 <span class="cb"><input type="checkbox" id="chAuto"><label for="chAuto"></label></span><input type="search" id="sInp" autocomplete="off"><input type="button" id="sBut" value="Поиск " onclick="wrapper(sInp.value.trim())"><span class="pBut topLeft" id="sortBtn" onClick="sortTabs()" title="Сортировка по дате">&#8645;</span></div>
 <div class="topRight" id="topRightCnt"></div></div><div id="hintBar"></div></div>
 <div id="prnt"><div style="height: 50vh; display: flex; align-items: center;"><div style="text-align: center"><h1>Ваш путеводитель <nobr>по игрожуру 90-х</nobr></h1><img class="sar" src="misc/sarth.png"><h2>Поиск и каталог обзоров старых игр для IBM&nbsp;PC</h2></div></div></div>
@@ -489,7 +521,7 @@ function showTimeline() {
         .tl-grid { position: relative; padding-top: 45px; padding-bottom: 20px; user-select: none; background: rgba(0,0,0,0.02); margin: 0 auto; }
         .tl-year { position: absolute; top: 0; border-left: 1px solid #aaa; height: 100%; width: 35px; text-align: left; z-index: 3; pointer-events: none; }
         .tl-year span { position: sticky; top: 10px; left: 200px; display: block; color: #444; font-weight: bold; transform: rotate(-45deg); transform-origin: left bottom; }
-    </style><div style='width: 100%; overflow-x: auto; display: flex; justify-content: flex-start; padding: 20px 0;'><div class='tl-grid' style='width: ${(max - min + 1) * 35}px; min-width: ${(max - min + 1) * 35}px; margin: 0 auto;'>`;
+    </style><div style='width: 100%; overflow-x: auto; display: flex; justify-content: flex-start; padding: 20px 0;'><div class='tl-grid' style='width: ${(max - min + 1) * 35}px; min-width: ${(max - min + 1) * 35}px; margin: 0 auto; background: var(--panel);'>`;
 
     for (let y = min; y <= max; y++) {
         res += `<div class='tl-year' style='left: ${(y - min) * 35}px'><span>${y}</span></div>`;
@@ -623,7 +655,7 @@ function showYearStats() {
         let h = (id, txt) => `<th class='ns' style='padding:5px' onclick="renderYearTable('${id}', ${sortCol===id?!asc:true})">${txt}</th>`;
         
         let chartHtml = chartLoaded 
-            ? `<div style="background: rgba(255,255,255,0.5); padding: 10px; border-radius: 10px; margin-bottom: 20px;">
+            ? `<div style="background: var(--panel); padding: 10px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--border);">
                 <canvas id="yearChart" style="max-height: 350px; height: 300px;"></canvas>
                </div>`
             : ``;
@@ -960,6 +992,19 @@ hintBar.innerHTML = '<center>'+yearBuffer+'</center>';
 }
 
 
+function toggleTheme() {
+    const isDark = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    document.getElementById('tglBtn').innerHTML = isDark ? '☾' : '☼';
+}
+// Применяем тему сразу при загрузке
+if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('tglBtn').innerHTML = '☾';
+    });
+}
+
 function renderHomeStats() {
 	const t0 = performance.now();
     let mCount = 0, issCount = 0, bCount = 0, pCount = 0, dCount = 0, artCount = 0, games = new Map();
@@ -980,8 +1025,8 @@ function renderHomeStats() {
     dis.forEach(d => { dCount++; countArt(d); });
     PDFs.forEach(pdf => { dCount++; countArt(pdf); });
 
-    const s = (val, txt) => `<div style="background: rgba(255,255,255,0.4); margin: 0 10 0 10; padding: 8px 4px; border-radius: 10px; border: 1px solid #d2cdbc; flex: 1 1 21%; min-width: 90px; max-width: 24%; text-align: center; box-sizing: border-box;">
-        <div style="font-size: 15px; font-weight: bold; color: #800000;">${val}</div><div style="font-size: 12px; text-transform: uppercase; color: #666;">${txt}</div></div>`;
+    const s = (val, txt) => `<div style="background: var(--panel); margin: 0 10 0 10; padding: 8px 4px; border-radius: 10px; border: 1px solid var(--border); flex: 1 1 21%; min-width: 90px; max-width: 24%; text-align: center; box-sizing: border-box;">
+        <div style="font-size: 15px; font-weight: bold; color: var(--h2);">${val}</div><div style="font-size: 12px; text-transform: uppercase; color: var(--text); opacity: 0.6;">${txt}</div></div>`;
 
 	let gList = Array.from(games.entries()).filter(e => e[1] > 30);
     let rndG = gList[Math.floor(Math.random() * gList.length)][0];
@@ -1004,15 +1049,14 @@ function renderHomeStats() {
     let [mName, mPref] = mags[mIdx][0].split('|');
     let mFile = mags[mIdx][mIss].split('|')[0];
 
-
     let blocks = `<div style="display:flex; gap:10px; width:100%; max-width:850px; margin-top:10px; flex-wrap: wrap;">
-        <div class="infMsg ns" style="flex: 1 1 300px; margin:0; padding:10px; display:flex; align-items:center; gap:12px; min-width:150px; box-sizing: border-box;" onclick="showGal(${mIdx})">
+        <div class="infMsg ns" style="flex: 1 1 300px; margin:0; padding:10px; display:flex; align-items:center; gap:12px; min-width:150px; box-sizing: border-box; background: var(--panel); color: var(--text);" onclick="showGal(${mIdx})">
             <img src="cvs/${mPref}${mFile}.jpg" style="width:50px; height:65px; object-fit:cover; border-radius:3px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2)">
-            <div><small style="color:#666; font-size:12px;">СЛУЧАЙНОЕ ИЗДАНИЕ</small><br><b style="font-size:14px">${mName}</b></div>
+            <div><small style="color:var(--text); font-size:12px;">СЛУЧАЙНОЕ ИЗДАНИЕ</small><br><b style="font-size:14px">${mName}</b></div>
         </div>
-        <div class="infMsg ns" style="flex: 1 1 300px; margin:0; padding:10px; display:flex; align-items:center; gap:12px; min-width:280px; box-sizing: border-box;" onclick="wrapper('${rndG.replace(/'/g, "^")}=')">
+        <div class="infMsg ns" style="flex: 1 1 300px; margin:0; padding:10px; display:flex; align-items:center; gap:12px; min-width:280px; box-sizing: border-box; background: var(--panel); color: var(--text);" onclick="wrapper('${rndG.replace(/'/g, "^")}=')">
             <img src="${rndCovG}" style="width:50px; height:65px; object-fit:cover; border-radius:3px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2)">
-            <div><small style="color:#666; font-size:12px;">СЛУЧАЙНАЯ ИГРА</small><br><b style="font-size:14px">${rndG.toUpperCase()}</b></div>
+            <div><small style="color:var(--text); font-size:12px;">СЛУЧАЙНАЯ ИГРА</small><br><b style="font-size:14px">${rndG.toUpperCase()}</b></div>
         </div>
     </div>`;
 
