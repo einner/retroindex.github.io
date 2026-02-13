@@ -157,6 +157,7 @@ nav ul ul li {width:262px; display:list-item; position: relative;}
 <script src="papers.js"></script>
 <script src="digital.js"></script>
 <script src="links.js"></script>
+<script src="oldgames.js"></script>
 </head>
 <body> 
 <div class="topSticky"><div class="topBar"><div class="topRex"><img src="misc/rex.png" width="65" height="30"></div>
@@ -601,20 +602,41 @@ function showStats() {
     otvinta.forEach(v => processTV(v.split('|')[1].split('+'), v.split('|')[2], 'v'));
     tvs.forEach(tv => tv.forEach((entry, idx) => { if (idx > 0) processTV(entry.split('|')[0].split('+'), entry.split('|')[1], 'v') }));
 
-    let top = Object.values(stats).sort((a, b) => b.total - a.total).slice(0, 1000);
+    let top = Object.values(stats).map(item => {
+        const og = typeof ogData !== 'undefined' ? ogData[item.name] : null;
+        return {
+            ...item,
+            genre: og ? og[0] : '—',
+            year: og ? og[1] : '—',
+            rating: og ? og[4] : '—',
+            ogId: og ? og[5] : null
+        };
+    }).sort((a, b) => b.total - a.total).slice(0, 1000);
     
     window.renderStatsTable = (data, sortCol = 'total', asc = false) => {
         data.sort((a, b) => {
             let v1 = a[sortCol], v2 = b[sortCol];
-            if (sortCol === 'name') return asc ? v1.localeCompare(v2) : v2.localeCompare(v1);
+            if (sortCol === 'name' || sortCol === 'genre') {
+                v1 = String(v1); v2 = String(v2);
+                return asc ? v1.localeCompare(v2) : v2.localeCompare(v1);
+            }
             return asc ? v1 - v2 : v2 - v1;
         });
         let h = (id, txt) => `<th class='ns' onclick="renderStatsTable(window.currentTop, '${id}', ${sortCol===id?!asc:false})">${txt}</th>`;
-        let res = `<style>#statTab TD A {padding: 2px 0; text-align: left;}</style> <div class='infMsg' style='width: 80vw; margin: 30px auto;'><h1>ТОП-1000 игр по числу статей и новостей</h1>
+        let res = `<style>#statTab TD A {padding: 2px 0; text-align: left;} .ogL {opacity:0.5} .ogL:hover {opacity:1}</style> 
+        <div class='infMsg' style='width: 95vw; margin: 30px auto;'><h1>ТОП-1000 игр по числу статей и новостей</h1>
         <table id='statTab' class='tRes colP' style='background: none;'><tr><th>#</th>
-        ${h('name','Название')} ${h('total','Упоминаний')} ${h('minY','Годы')} ${h('m','Журн')} ${h('b','Книг')} ${h('n','Газет')} ${h('d','Цифр')} ${h('v','ТВ')} </tr>`;
+        ${h('name','Название')} ${h('total','Материалов')} ${h('minY','Когда писали')} ${h('year','Год выхода')} ${h('genre','Жанр')} ${h('rating','Оценка')} <!-- ${h('m','Журн')} ${h('b','Книг')} ${h('v','ТВ')} --> <th>Ссылка</th></tr>`;
         data.forEach((s, i) => {
-            res += `<tr style='background: ${i%2?"rgba(0,0,0,0.05)":"none"}'><td>${i+1}</td><td style='text-align:left; padding: 5px 10px'><a onclick="wrapper('${s.name}=')">${s.name}</a></td><td><b>${s.total}</b></td><td>${s.minY}${s.minY!=s.maxY?'-'+s.maxY:''}</td><td>${s.m}</td><td>${s.b}</td><td>${s.n}</td><td>${s.d}</td><td>${s.v}</td></tr>`;
+            let ogLink = s.ogId ? `<a href="https://www.old-games.ru/game/${s.ogId}.html" target="_blank" class="ogL"><img src="misc/linked.png" width="16"></a>` : '';
+            res += `<tr style='background: ${i%2?"rgba(0,0,0,0.05)":"none"}'>
+                <td>${i+1}</td>
+                <td style='text-align:left; padding: 5px 10px'><a onclick="wrapper('${s.name.replace(/'/g, "^")}=')">${s.name}</a></td>
+                <td><b>${s.total}</b></td>
+                <td><small>${s.minY}${s.minY!=s.maxY?'-'+s.maxY:''}</small></td>
+                <td>${s.year}</td><td><small>${s.genre}</small></td><td>${s.rating}</td>
+                <!-- <td>${s.m}</td><td>${s.b}</td><td>${s.v}</td> -->
+                <td>${ogLink}</td></tr>`;
         });
         prnt.innerHTML = res + "</table></div>";
     }
