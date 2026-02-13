@@ -435,16 +435,18 @@ if (gHint.length < 64) {
                     <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px;">
                         <div>
                             <h1 style="margin: 0 0 5px 0;">${cleanName}</h1>
+                            <style> .game-link { text-decoration: underline; cursor: pointer; color: var(--h2); } </style>
                             <div style="font-size: 14px;">
-                                <b>Жанр:</b> ${og[0]} | <b>Год:</b> ${og[1]} | <b>Платформа:</b> ${og[2]} | <b>Издатель:</b> ${og[3]} | 
+                                <b>Жанр:</b> <a class="game-link" onclick="showStats({genre: '${og[0]}'})">${og[0]}</a> | 
+                                <b>Год:</b> <a class="game-link" onclick="showStats({year: '${og[1]}'})">${og[1]}</a> | 
+                                <b>Платформа:</b> <a class="game-link" onclick="showStats({platform: '${og[2]}'})">${og[2]}</a> | 
+                                <b>Издатель:</b> <a class="game-link" onclick="showStats({publisher: '${og[3]}'})">${og[3]}</a> | 
                                 <b>Оценка OldGames:</b> <span style="color: var(--h2); font-weight: bold;">${og[4]}</span>
                             </div>
                         </div>
                         <a href="https://www.old-games.ru/game/${og[5]}.html" target="_blank" style="width: auto; padding: 5px 15px; border: 1px solid var(--border); border-radius: 5px; text-decoration: none; color: var(--text); background: rgba(127,127,127,0.1); font-size: 13px;">
                             Открыть на Old-Games.ru →
-                        </a>
-                    </div>
-                </div>`;
+                        </a>`;
             }
         }
         prnt.innerHTML = gameHeader + magRes + bookRes + papRes + discRes + PDFRes + vidRes + gridFix.repeat(4);
@@ -567,7 +569,7 @@ function showTimeline() {
 }
 
 
-function showStats() {
+function showStats(filter = null) {
     let stats = {};
     const process = (data, type, isMagOrPaper = false) => {
         data.forEach((entry, idx) => {
@@ -633,11 +635,20 @@ function showStats() {
             ...item,
             genre: og ? og[0] : '—',
             year: og ? og[1] : '—',
+            platform: og ? og[2] : '—',
+            publisher: og ? og[3] : '—',
             rating: og ? og[4] : '—',
             ogId: og ? og[5] : null
         };
     }).sort((a, b) => b.total - a.total).slice(0, 1000);
     
+    if (filter) {
+        if (filter.genre) top = top.filter(x => x.genre === filter.genre);
+        if (filter.year) top = top.filter(x => x.year == filter.year);
+        if (filter.publisher) top = top.filter(x => x.publisher == filter.publisher);
+        if (filter.platform) top = top.filter(x => x.platform == filter.platform);
+    }
+
     window.renderStatsTable = (data, sortCol = 'total', asc = false) => {
         data.sort((a, b) => {
             let v1 = a[sortCol], v2 = b[sortCol];
@@ -655,8 +666,13 @@ function showStats() {
             return asc ? n1 - n2 : n2 - n1;
         });
         let h = (id, txt) => `<th class='ns' onclick="renderStatsTable(window.currentTop, '${id}', ${sortCol===id?!asc:false})">${txt}</th>`;
-        let res = `<style>#statTab TD A {padding: 2px 0; text-align: left;} .ogL {opacity:0.5} .ogL:hover {opacity:1}</style> 
-        <div class='infMsg' style='width: 95vw; margin: 30px auto;'><h1>ТОП-1000 игр по числу статей и новостей</h1>
+        let filterTitle = '';
+        if (filter) {
+            let filterVal = filter.genre || filter.year || filter.publisher || filter.platform;
+            filterTitle = ` (фильтр: ${filterVal} <span class="clear-filter" onclick="showStats()" title="Убрать фильтр" style="cursor:pointer; color:darkred; margin-left:5px;">&times;</span>)`;
+        }
+        let res = `<style>#statTab TD A {padding: 2px 0; text-align: left; cursor: pointer;} .ogL {opacity:0.5} .ogL:hover {opacity:1}</style> 
+        <div class='infMsg' style='width: 95vw; margin: 30px auto;'><h1>Сводная таблица игр${filterTitle}</h1>
         <table id='statTab' class='tRes colP' style='background: none;'><tr><th>#</th>
         ${h('name','Название')} ${h('total','Материалов')} ${h('minY','Когда писали')} ${h('year','Год выхода')} ${h('genre','Жанр')} ${h('rating','Оценка')} <!-- ${h('m','Журн')} ${h('b','Книг')} ${h('v','ТВ')} --> <th>Ссылка</th></tr>`;
         data.forEach((s, i) => {
@@ -666,7 +682,9 @@ function showStats() {
                 <td style='text-align:left; padding: 5px 10px'><a onclick="wrapper('${s.name.replace(/'/g, "^")}=')">${s.name}</a></td>
                 <td><b>${s.total}</b></td>
                 <td><small>${s.minY}${s.minY!=s.maxY?'-'+s.maxY:''}</small></td>
-                <td>${s.year}</td><td><small>${s.genre}</small></td><td>${s.rating}</td>
+                <td><a onclick="showStats({year:'${s.year}'})">${s.year}</a></td>
+                <td><small><a onclick="showStats({genre:'${s.genre}'})">${s.genre}</a></small></td>
+                <td>${s.rating}</td>
                 <!-- <td>${s.m}</td><td>${s.b}</td><td>${s.v}</td> -->
                 <td>${ogLink}</td></tr>`;
         });
