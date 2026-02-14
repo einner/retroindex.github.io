@@ -1,4 +1,4 @@
-﻿<html>
+<html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link type="image/png" sizes="192x192" rel="icon" href="misc/favicon-192x192.png">
@@ -522,6 +522,9 @@ if (gHint.length < 64) {
             
             if (og) {
                 yearBarHtml = getYearBarHtml(cleanName);
+                let ratingHtml = og[4] ? `<b>Оценка</b> <span style="color: var(--h2); font-weight: bold;">${og[4]}</span>` : '';
+                let linkHtml = og[5] ? `<a href="https://www.old-games.ru/game/${og[5]}.html" target="_blank" style="width: auto; padding: 5px 15px; border: 1px solid var(--border); border-radius: 5px; text-decoration: none; color: var(--text); background: rgba(127,127,127,0.1); font-size: 13px;">Открыть на Old-Games.ru →</a>` : '';
+                let separator = (og[4] && og[5]) ? ' | ' : '';
                 gameHeader = `
                 <div class="infMsg" style="width: 90%; max-width: 1000px; margin: 10px auto 20px; box-sizing: border-box; text-align: left;">
                     <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px;">
@@ -532,13 +535,10 @@ if (gHint.length < 64) {
                                 <b>Жанр</b> <a class="game-link" onclick="showStats({genre: '${og[0]}'})">${og[0]}</a> | 
                                 <b>Год</b> <a class="game-link" onclick="showStats({year: '${og[1]}'})">${og[1]}</a> | 
                                 <b>Платформа</b> <a class="game-link" onclick="showStats({platform: '${og[2]}'})">${og[2]}</a> | 
-                                <b>Издатель</b> <a class="game-link" onclick="showStats({publisher: '${og[3]}'})">${og[3]}</a> | 
-                                <b>Оценка</b> <span style="color: var(--h2); font-weight: bold;">${og[4]}</span>
+                                <b>Издатель</b> <a class="game-link" onclick="showStats({publisher: '${og[3]}'})">${og[3]}</a>${separator}${ratingHtml}
                             </div>
                         </div>
-                        <a href="https://www.old-games.ru/game/${og[5]}.html" target="_blank" style="width: auto; padding: 5px 15px; border: 1px solid var(--border); border-radius: 5px; text-decoration: none; color: var(--text); background: rgba(127,127,127,0.1); font-size: 13px;">
-                            Открыть на Old-Games.ru →
-                        </a>
+                        ${linkHtml}
                     </div>
                     ${yearBarHtml}
                 </div>`;
@@ -677,15 +677,15 @@ navState('stats', {});
     tvs.forEach(tv => tv.forEach((entry, idx) => { if (idx > 0) processTV(entry.split('|')[0].split('+'), entry.split('|')[1], 'v') }));
 
     let top = Object.values(stats).map(item => {
-        const og = typeof ogData !== 'undefined' ? ogData[item.name] : null;
+        const og = typeof ogData !== 'undefined' ? (ogData[item.name] || ogData[item.name.toLowerCase()]) : null;
         return {
             ...item,
             genre: og ? og[0] : '—',
             year: og ? og[1] : '—',
             platform: og ? og[2] : '—',
             publisher: og ? og[3] : '—',
-            rating: og ? og[4] : '—',
-            ogId: og ? og[5] : null
+            rating: (og && og[4] !== null && og[4] !== undefined) ? og[4] : '—',
+            ogId: (og && og[5] !== null && og[5] !== undefined) ? og[5] : null
         };
     }).sort((a, b) => b.total - a.total).slice(0, 1000);
     
