@@ -455,7 +455,73 @@ if (gHint.length < 64) {
         if (sReg.indexOf('=') >= 0) {
             let cleanName = sReg.replace('=', '').trim();
             let og = typeof ogData !== 'undefined' ? (ogData[cleanName] || ogData[cleanName.toLowerCase()]) : null;
+            let hasResults = (magRes + bookRes + papRes + discRes + PDFRes + vidRes).indexOf(cleanName) >= 0;
+            let yearBarHtml = '';
+            
+            // Функция сбора годов (общая для обоих случаев)
+            const getYearBarHtml = (gameName) => {
+                const lowerName = gameName.toLowerCase();
+                const yearCounts = {};
+                for (let y = 1994; y <= 2018; y++) yearCounts[y] = 0;
+                const collectYears = (data) => {
+                    data.forEach((entry, idx) => {
+                        if (idx === 0) return;
+                        let parts = entry.split('|');
+                        let yy = parts[0].slice(0, 2);
+                        let year = parseInt(yy) > 90 ? 1900 + parseInt(yy) : 2000 + parseInt(yy);
+                        if (year < 1994 || year > 2018) return;
+                        for (let j = 1; j < parts.length; j++) {
+                            let name = parts[j].split(',')[0].trim().replace(/ \(.*\)/ig, '').toLowerCase();
+                            if (name === lowerName) { yearCounts[year]++; break; }
+                        }
+                    });
+                };
+                mags.forEach(m => collectYears(m));
+                books.forEach(b => b.forEach((entry, idx) => {
+                    if (idx === 0) return;
+                    let parts = entry.split('|');
+                    let year = parseInt(book_details[parts[0]].split('|')[3]);
+                    if (year >= 1994 && year <= 2018) {
+                        for (let j = 1; j < parts.length; j++) {
+                            let name = parts[j].split(',')[0].trim().replace(/ \(.*\)/ig, '').toLowerCase();
+                            if (name === lowerName) { yearCounts[year]++; break; }
+                        }
+                    }
+                }));
+                papers.forEach(p => collectYears(p));
+                dis.forEach(d => collectYears(d));
+                PDFs.forEach(p => collectYears(p));
+                otvinta.forEach(v => {
+                    let parts = v.split('|');
+                    let year = parseInt(parts[2].slice(-4));
+                    if (year >= 1994 && year <= 2018) {
+                        parts[1].split('+').forEach(g => {
+                            if (g.trim().toLowerCase() === lowerName) yearCounts[year]++;
+                        });
+                    }
+                });
+                tvs.forEach(tv => tv.forEach((entry, idx) => {
+                    if (idx === 0) return;
+                    let parts = entry.split('|');
+                    let year = parseInt(parts[1].slice(-4));
+                    if (year >= 1994 && year <= 2018) {
+                        parts[0].split('+').forEach(g => {
+                            if (g.trim().toLowerCase() === lowerName) yearCounts[year]++;
+                        });
+                    }
+                }));
+                const maxCount = Math.max(...Object.values(yearCounts), 1);
+                let barsHtml = '';
+                for (let y = 1994; y <= 2018; y++) {
+                    let h = yearCounts[y] > 0 ? Math.round((yearCounts[y] / maxCount) * 50) + 10 : 2;
+                    let bg = yearCounts[y] > 0 ? '#345fb9' : '#ddd';
+                    barsHtml += `<div style="flex:1;display:flex;flex-direction:column;align-items:center;margin:0 1px;"><div style="width:100%;background:${bg};height:${h}px;border-radius:2px 2px 0 0;cursor:pointer;" title="${y}: ${yearCounts[y]}"></div><span style="font:11px Arial;margin-top:2px;white-space:nowrap;">${y.toString().slice(-2)}</span></div>`;
+                }
+                return `<div style="margin-top: 15px; padding-top: 10px; border-top: 1px dotted var(--border);"><div style="display:flex;height:80px;align-items:flex-end;">${barsHtml}</div></div>`;
+            };
+            
             if (og) {
+                yearBarHtml = getYearBarHtml(cleanName);
                 gameHeader = `
                 <div class="infMsg" style="width: 90%; max-width: 1000px; margin: 10px auto 20px; box-sizing: border-box; text-align: left;">
                     <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 10px;">
@@ -463,17 +529,26 @@ if (gHint.length < 64) {
                             <h1 style="margin: 0 0 5px 0;">${cleanName}</h1>
                             <style> .game-link { text-decoration: underline; cursor: pointer; color: var(--h2); } </style>
                             <div style="font-size: 14px;">
-                                <b>Жанр:</b> <a class="game-link" onclick="showStats({genre: '${og[0]}'})">${og[0]}</a> | 
-                                <b>Год:</b> <a class="game-link" onclick="showStats({year: '${og[1]}'})">${og[1]}</a> | 
-                                <b>Платформа:</b> <a class="game-link" onclick="showStats({platform: '${og[2]}'})">${og[2]}</a> | 
-                                <b>Издатель:</b> <a class="game-link" onclick="showStats({publisher: '${og[3]}'})">${og[3]}</a> | 
-                                <b>Оценка OldGames:</b> <span style="color: var(--h2); font-weight: bold;">${og[4]}</span>
+                                <b>Жанр</b> <a class="game-link" onclick="showStats({genre: '${og[0]}'})">${og[0]}</a> | 
+                                <b>Год</b> <a class="game-link" onclick="showStats({year: '${og[1]}'})">${og[1]}</a> | 
+                                <b>Платформа</b> <a class="game-link" onclick="showStats({platform: '${og[2]}'})">${og[2]}</a> | 
+                                <b>Издатель</b> <a class="game-link" onclick="showStats({publisher: '${og[3]}'})">${og[3]}</a> | 
+                                <b>Оценка</b> <span style="color: var(--h2); font-weight: bold;">${og[4]}</span>
                             </div>
                         </div>
                         <a href="https://www.old-games.ru/game/${og[5]}.html" target="_blank" style="width: auto; padding: 5px 15px; border: 1px solid var(--border); border-radius: 5px; text-decoration: none; color: var(--text); background: rgba(127,127,127,0.1); font-size: 13px;">
                             Открыть на Old-Games.ru →
                         </a>
                     </div>
+                    ${yearBarHtml}
+                </div>`;
+            } else if (hasResults) {
+                // Игра найдена, но нет в oldgames - показываем блок с графиком
+                yearBarHtml = getYearBarHtml(cleanName);
+                gameHeader = `
+                <div class="infMsg" style="width: 90%; max-width: 1000px; margin: 10px auto 20px; box-sizing: border-box; text-align: left;">
+                    <h1 style="margin: 0 0 5px 0;">${cleanName}</h1>
+                    ${yearBarHtml}
                 </div>`;
             }
         }
