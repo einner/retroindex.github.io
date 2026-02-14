@@ -194,7 +194,7 @@ for (let i=0; i<papers.length; i++) {
 sel += "</ul></li><li><a>Цифра</a><ul><li class='ulD grD'><a>Дискмаги <span class='mc'>EXE</span></a></li>"
 for (let i=0; i<dis.length; i++) sel+= "<li class='ulD'><a onclick='showDiscGal("+i+")'>"+dis[i][0].split("|")[0]+"<span class='mc'>"+(dis[i].length-1)+"</span></a></li>"; sel += "<li class='ulP grP'><a>Электронные журналы <span class='mc'>PDF</span></a></li>"
 for (let i=0; i<PDFs.length; i++) sel+= "<li class='ulP'><a onclick='showPDFGal("+i+")'>"+PDFs[i][0].split("|")[0]+"<span class='mc'>"+(PDFs[i].length-1)+"</span></a></li>"; 
-sel+="</ul></li><li><a onclick='showTVGal()'>ТВ</a></li>|<li><a onclick='showStats()'>Игры</a></li>|<li><a onclick='showYearStats()'>Стата</a></li>|<li><a onclick='showTimeline()'>Годы</a></li></ul></nav>";
+sel+="</ul></li><li><a onclick='showTVGal()'>ТВ</a></li>|<li><a onclick='showStats()'>Игры</a></li>|<li><a onclick='showYearStats()'>Годы</a></li></ul></nav>";
 topRightCnt.innerHTML = sel;
 
 let sBtn = document.getElementById('sortBtn');
@@ -237,7 +237,6 @@ window.onpopstate = function(e) {
     else if (action === 'misc') showMiscGal();
     else if (action === 'stats') showStats();
     else if (action === 'yearStats') showYearStats();
-    else if (action === 'timeline') showTimeline();
     else if (action === 'year') showYear(data.year);
     else if (action === 'search') { sInp.value = data.q; wrapper(data.q); }
     else { renderHomeStats(); prnt.innerHTML = ''; hintBar.innerHTML = ''; }
@@ -541,64 +540,6 @@ return(fullYear+pubMon);
 }
 
 
-function showTimeline() {
-    navState('timeline', {});
-    let years = [], data = [];
-    
-    // Собираем журналы
-    mags.forEach((m, idx) => {
-        let [name, pref, type] = m[0].split('|');
-        if (type === "1" || m.length < 2) return;
-        let yList = m.slice(1).map(i => {
-            let yy = parseInt(i.split('|')[0].slice(0, 2));
-            return (yy > 90) ? 1900 + yy : 2000 + yy;
-        });
-        data.push({ name: name.split(' (')[0], start: Math.min(...yList), end: Math.max(...yList), type: 'mag', idx: idx });
-        years.push(...yList);
-    });
-
-    // Собираем газеты
-    papers.forEach((p, idx) => {
-        let [name, pref] = p[0].split('|');
-        if (p.length < 2) return;
-        let yList = p.slice(1).map(i => {
-            let yy = parseInt(i.split('|')[0].split('@')[0].slice(0, 2));
-            return (yy > 90) ? 1900 + yy : 2000 + yy;
-        });
-        data.push({ name: name.split(' (')[0], start: Math.min(...yList), end: Math.max(...yList), type: 'pap', idx: idx });
-        years.push(...yList);
-    });
-
-    let min = Math.min(...years), max = Math.max(...years);
-    data.sort((a, b) => a.start - b.start || b.end - a.end);
-
-    let res = `<style>
-        .tl-row { display: flex; align-items: center; height: 18px; margin: 1px 0; font: 11px Arial; white-space: nowrap; position: relative; z-index: 2; }
-        .tl-bar { color: #fff; height: 100%; border-radius: 3px; padding: 0 5px; overflow: hidden; display: flex; align-items: center; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
-        .tl-bar:hover { filter: brightness(1.2); outline: 1px solid #fff; }
-        .tl-grid { position: relative; padding-top: 45px; padding-bottom: 20px; user-select: none; background: rgba(0,0,0,0.02); margin: 0 auto; }
-        .tl-year { position: absolute; top: 0; border-left: 1px solid #aaa; height: 100%; width: 35px; text-align: left; z-index: 3; pointer-events: none; }
-        .tl-year span { position: sticky; top: 10px; left: 200px; display: block; color: #444; font-weight: bold; transform: rotate(-45deg); transform-origin: left bottom; }
-    </style><div style='width: 100%; overflow-x: auto; display: flex; justify-content: flex-start; padding: 20px 0;'><div class='tl-grid' style='width: ${(max - min + 1) * 35}px; min-width: ${(max - min + 1) * 35}px; margin: 0 auto; background: var(--panel);'>`;
-
-    for (let y = min; y <= max; y++) {
-        res += `<div class='tl-year' style='left: ${(y - min) * 35}px'><span>${y}</span></div>`;
-    }
-
-    data.forEach(d => {
-        let w = (d.end - d.start + 1) * 35;
-        let l = (d.start - min) * 35;
-        let color = d.type === 'mag' ? '#345fb9' : '#0d96a4';
-        let clickAction = d.type === 'mag' ? `showGal(${d.idx})` : `showPaperGal(${d.idx})`;
-        res += `<div class='tl-row'><div class='tl-bar' style='margin-left: ${l}px; width: ${w}px; background: ${color}' onclick="${clickAction}">${d.name}</div></div>`;
-    });
-
-    prnt.innerHTML = res + "</div></div>";
-    hintBar.innerHTML = '';
-    window.scrollTo(0, 0);
-}
-
-
 function showStats(filter = null) {
 navState('stats', {});
     let stats = {};
@@ -749,6 +690,34 @@ function showYearStats() {
 
     let data = Object.values(yData);
     
+    let tlData = [];
+    let tlYears = [];
+    
+    mags.forEach((m, idx) => {
+        let [name, pref, type] = m[0].split('|');
+        if (type === "1" || m.length < 2) return;
+        let yList = m.slice(1).map(i => {
+            let yy = parseInt(i.split('|')[0].slice(0, 2));
+            return (yy > 90) ? 1900 + yy : 2000 + yy;
+        });
+        tlData.push({ name: name.split(' (')[0], start: Math.min(...yList), end: Math.max(...yList), type: 'mag', idx: idx });
+        tlYears.push(...yList);
+    });
+
+    papers.forEach((p, idx) => {
+        let [name, pref] = p[0].split('|');
+        if (p.length < 2) return;
+        let yList = p.slice(1).map(i => {
+            let yy = parseInt(i.split('|')[0].split('@')[0].slice(0, 2));
+            return (yy > 90) ? 1900 + yy : 2000 + yy;
+        });
+        tlData.push({ name: name.split(' (')[0], start: Math.min(...yList), end: Math.max(...yList), type: 'pap', idx: idx });
+        tlYears.push(...yList);
+    });
+
+    let tlMin = Math.min(...tlYears), tlMax = Math.max(...tlYears);
+    tlData.sort((a, b) => a.start - b.start || b.end - b.end);
+    
     window.renderYearTable = (sortCol = 'year', asc = true) => {
         data.sort((a, b) => {
             let v1 = a[sortCol], v2 = b[sortCol];
@@ -764,6 +733,28 @@ function showYearStats() {
                </div>`
             : ``;
 
+        let timelineHtml = `<style>
+            .tl-row { display: flex; align-items: center; height: 18px; margin: 1px 0; font: 11px Arial; white-space: nowrap; position: relative; z-index: 2; }
+            .tl-bar { color: #fff; height: 100%; border-radius: 3px; padding: 0 5px; overflow: hidden; display: flex; align-items: center; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
+            .tl-bar:hover { filter: brightness(1.2); outline: 1px solid #fff; }
+            .tl-grid { position: relative; padding-top: 45px; padding-bottom: 20px; user-select: none; background: rgba(0,0,0,0.02); margin: 0 auto; }
+            .tl-year { position: absolute; top: 0; border-left: 1px solid #aaa; height: 100%; width: 35px; text-align: left; z-index: 3; pointer-events: none; }
+            .tl-year span { position: sticky; top: 10px; left: 200px; display: block; color: #444; font-weight: bold; transform: rotate(-45deg); transform-origin: left bottom; }
+        </style><div style='width: 100%; overflow-x: auto; display: flex; justify-content: flex-start; padding: 20px 0;'><div class='tl-grid' style='width: ${(tlMax - tlMin + 1) * 35}px; min-width: ${(tlMax - tlMin + 1) * 35}px; margin: 0 auto; background: var(--panel);'>`;
+
+        for (let y = tlMin; y <= tlMax; y++) {
+            timelineHtml += `<div class='tl-year' style='left: ${(y - tlMin) * 35}px'><span>${y}</span></div>`;
+        }
+
+        tlData.forEach(d => {
+            let w = (d.end - d.start + 1) * 35;
+            let l = (d.start - tlMin) * 35;
+            let color = d.type === 'mag' ? '#345fb9' : '#0d96a4';
+            let clickAction = d.type === 'mag' ? `showGal(${d.idx})` : `showPaperGal(${d.idx})`;
+            timelineHtml += `<div class='tl-row'><div class='tl-bar' style='margin-left: ${l}px; width: ${w}px; background: ${color}' onclick="${clickAction}">${d.name}</div></div>`;
+        });
+        timelineHtml += "</div></div>";
+
         let res = `<style>#yTab td {padding: 2px 5px; height: 20px;} #yTab a {padding: 0; text-align: center;}</style>
             <div class='infMsg' style='width: 85vw; margin: 30px auto;'>
             <h1>Активность игрожура по годам</h1>
@@ -776,7 +767,10 @@ function showYearStats() {
                 <td><a onclick="showYear(${d.year})"><b>${d.year}</b></a></td>
                 <td>${d.uniqueMags.size}</td><td>${d.issues}</td><td>${d.articles}</td></tr>`;
         });
-        prnt.innerHTML = res + "</table></div>";
+        res += "</table></div>";
+        res += `<div class='infMsg' style='width: 85vw; margin: 30px auto;'><h1>Хронология изданий</h1>${timelineHtml}</div>`;
+        
+        prnt.innerHTML = res;
         if (chartLoaded) initYearChart(Object.values(yData).sort((a,b)=>a.year-b.year));
     };
 
