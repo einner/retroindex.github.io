@@ -104,7 +104,7 @@ P {margin-bottom: 0;}
 #covModal {display: none; position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.5); z-index: 150; align-items: center; justify-content: center;}
 #modContent {background: var(--bg) var(--bg-img); border-radius: 15px; padding: 10px; border: 3px solid #345fb9; width: 450px; z-index: 20; display: flex; align-items: flex-start;}
 #hintBar {margin-top: 5px; padding: 0 10px 5px 5px; min-height: 22px; background-color: rgba(127,127,127,0.1); border-top: #bbb 1px dotted; border-bottom: #bbb 1px dotted;}
-#hintBar span {display: inline-block; border-radius: 4px; font: 12px Arial; padding: 1px 3px; margin-left: 5px; margin-top: 5px; background-color: var(--h2); color: #000; white-space: nowrap;}
+#hintBar span {display: inline-block; border-radius: 4px; font: 12px Arial; padding: 1px 3px; margin-left: 5px; margin-top: 5px; background-color: var(--panel); color: #000; white-space: nowrap;}
 #hintBar span:hover {background-color: gold; cursor: pointer;}
 nav {white-space: nowrap;}
 nav ul {padding:0; margin:0; list-style: none; position: relative;}
@@ -214,13 +214,40 @@ if (sHash.indexOf('+')>=0) sBtn.click();
 }}
 
 let timeout = null;	// debounce
+let skipNavState = false;
 sInp.onkeyup = function (e) {if (chAuto.checked) {clearTimeout(timeout); timeout = setTimeout(function () {wrapper(sInp.value.trim())}, 500)}};
 document.addEventListener('keyup', function(event) {if (event.key == 'Enter' && sInp.value != '') wrapper(sInp.value.trim());});
 document.addEventListener('keydown', function(event) {if (event.key == 'Escape') {if (modal.style.display == 'flex') modal.style.display = 'none'; else {sInp.value=''; hintBar.innerHTML=''}}});
 window.addEventListener('hashchange', function() {location.reload();}, false);
 
+function navState(action, data) {
+    if (skipNavState) return;
+    history.pushState({action, data}, '');
+}
+window.onpopstate = function(e) {
+    skipNavState = true;
+    if (!e.state) { renderHomeStats(); prnt.innerHTML = ''; hintBar.innerHTML = ''; skipNavState = false; return; }
+    const {action, data} = e.state;
+    if (action === 'gal') showGal(data.idx);
+    else if (action === 'book') showBookGal(data.idx);
+    else if (action === 'paper') showPaperGal(data.idx);
+    else if (action === 'pdf') showPDFGal(data.idx);
+    else if (action === 'disc') showDiscGal(data.idx);
+    else if (action === 'tv') showTVGal();
+    else if (action === 'misc') showMiscGal();
+    else if (action === 'stats') showStats();
+    else if (action === 'yearStats') showYearStats();
+    else if (action === 'timeline') showTimeline();
+    else if (action === 'year') showYear(data.year);
+    else if (action === 'search') { sInp.value = data.q; wrapper(data.q); }
+    else { renderHomeStats(); prnt.innerHTML = ''; hintBar.innerHTML = ''; }
+    setTimeout(() => skipNavState = false, 10);
+};
+
 
 function wrapper(wReg) {
+if (wReg) 
+    navState('search', {q: wReg});
 let triedAbbr = false;
 
 wReg = wReg.replace(/[*+,|?{}\[\]\(\)\\]/g, '');
@@ -446,7 +473,9 @@ if (gHint.length < 64) {
                         </div>
                         <a href="https://www.old-games.ru/game/${og[5]}.html" target="_blank" style="width: auto; padding: 5px 15px; border: 1px solid var(--border); border-radius: 5px; text-decoration: none; color: var(--text); background: rgba(127,127,127,0.1); font-size: 13px;">
                             Открыть на Old-Games.ru →
-                        </a>`;
+                        </a>
+                    </div>
+                </div>`;
             }
         }
         prnt.innerHTML = gameHeader + magRes + bookRes + papRes + discRes + PDFRes + vidRes + gridFix.repeat(4);
@@ -513,6 +542,7 @@ return(fullYear+pubMon);
 
 
 function showTimeline() {
+    navState('timeline', {});
     let years = [], data = [];
     
     // Собираем журналы
@@ -570,6 +600,7 @@ function showTimeline() {
 
 
 function showStats(filter = null) {
+navState('stats', {});
     let stats = {};
     const process = (data, type, isMagOrPaper = false) => {
         data.forEach((entry, idx) => {
@@ -698,6 +729,7 @@ function showStats(filter = null) {
 
 
 function showYearStats() {
+    navState('yearStats', {});
     let yData = {};
     const chartLoaded = typeof Chart !== 'undefined';
 
@@ -786,6 +818,7 @@ function showYearStats() {
 
 
 function showGal(mt,ms) {
+navState('gal', {idx: mt});
 let galArray = []; let cl = 0;
 let pubYear = '', issNum = '', lazyLoad = '', numfix=0, fullYear;
 let [magName, magPref] = mags[mt][0].split("|");
@@ -824,6 +857,7 @@ if ((window.location.protocol == "file:")&&(ms !== undefined)) document.getEleme
 }
 
 function showBookGal(mt) {
+navState('book', {idx: mt});
 let pubYear = '';
 let galRes = "<div class='gal'><h1>"+books[mt][0]+"</h1>";
 for (let i=1; i<books[mt].length; i++) {
@@ -844,6 +878,7 @@ window.scrollTo(0,0);
 }
 
 function showPaperGal(mt) {
+navState('paper', {idx: mt});
 let galArray = []; let cl = 0;
 let pubYear = '', lazyLoad = '', numfix=0, fullYear;
 let [papName, papPref] = papers[mt][0].split("|");
@@ -872,6 +907,7 @@ window.scrollTo(0,0);
 }
 
 function showPDFGal(mt) {
+navState('pdf', {idx: mt});
 let galArray = [];
 let pubYear = '';
 let [magName, magPref, magURL] = PDFs[mt][0].split("|");
@@ -889,6 +925,7 @@ prnt.innerHTML = galRes+"</div>";
 }
 
 function showDiscGal(mt) {
+navState('disc', {idx: mt});
 let galArray = [];
 let pubYear = '';
 let [magName, magPref] = dis[mt][0].split("|");
@@ -904,6 +941,7 @@ prnt.innerHTML = galRes+"</div>";
 }
 
 function showTVGal() {
+navState('tv', {});
 let galRes = "<div class='gal'><h1>Телепередачи</h1><h2>С Бонусом и Гамовером</h2>";
 galRes += "<img title='От винта!' id='v-ov' src='cvs/tv_ov.jpg' style='cursor: pointer;' onclick='showModal(this)'>";
 for (let i=0; i<tvs.length; i++) {
@@ -915,6 +953,7 @@ prnt.innerHTML = galRes+"</div>";
 }
 
 function showMiscGal() {
+navState('misc', {});
 let allRes = "<div class='gal'><h1>Прочие журналы</h1>"; 
 let galArray = []; let mt = 0;
 for (let j in maMisc) {
@@ -1019,7 +1058,8 @@ Array.from(items).sort(function(a, b) {a = a.getAttribute('data-pub'); b = b.get
 }
 
 function showYear(year) {
-let galArray = []; 
+if (year) navState('year', {year});
+let galArray = [];
 let rty = 2018;
 let lazyLoad = ''; if (window.location.protocol != "file:") lazyLoad = "loading='lazy'";
 if(year) {
