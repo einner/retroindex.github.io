@@ -201,20 +201,20 @@ let sBtn = document.getElementById('sortBtn');
 sBtn.addEventListener('click', function() {if (sBtn.style.color) sBtn.removeAttribute("style"); else sBtn.style.color = "#d00"; sortTabs();});
 
 window.newHints = true;
+let skipNavState = false;
 if (window.location.hash) {
 let sHash = window.location.hash.substring(1);
-history.pushState(null, null, ' ');
 if (hashTags.hasOwnProperty(sHash)) showGal(maKeys.indexOf(hashTags[sHash]));
 else if (Number(sHash)>1991 && Number(sHash)<=2018) showYear(Number(sHash));
 else {
 if (sHash.indexOf('%')>=0) sHash = decodeURI(sHash); 
 sHash = sHash.split('_').join(' '); sInp.value = sHash;
+history.replaceState({action: 'search', data: {q: sHash}}, '');
 wrapper(sHash);
 if (sHash.indexOf('+')>=0) sBtn.click();
 }}
 
 let timeout = null;	// debounce
-let skipNavState = false;
 sInp.onkeyup = function (e) {if (chAuto.checked) {clearTimeout(timeout); timeout = setTimeout(function () {wrapper(sInp.value.trim())}, 500)}};
 document.addEventListener('keyup', function(event) {if (event.key == 'Enter' && sInp.value != '') wrapper(sInp.value.trim());});
 document.addEventListener('keydown', function(event) {if (event.key == 'Escape') {if (modal.style.display == 'flex') modal.style.display = 'none'; else {sInp.value=''; hintBar.innerHTML=''}}});
